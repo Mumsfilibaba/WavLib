@@ -1,3 +1,6 @@
+#ifndef WAVLIB_H
+#define WAVLIB_H
+
 #include <stdint.h>
 
 #define WAVE_ERROR   (int)-1
@@ -57,4 +60,5 @@ int32_t LoadWavFileFloat(const char* Filename, float** OutputBuffer, WaveFile* H
 
 #ifdef __cplusplus
 }
+#endif
 #endif
