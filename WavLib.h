@@ -9,6 +9,11 @@
 #define WAVE_FORMAT_MULAW       0x0007
 #define WAVE_FORMAT_EXTENSIBLE  0xffff
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef struct tagWaveHeader
 {
     char        RIFF[4];
@@ -42,10 +47,14 @@ typedef struct tagWaveFile
     Returns a soundbuffer from .wav file as a byte buffer.
     Caller is responsible for calling free.
 */
-int32_t LoadWaveSoundBuffer(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header);
+int32_t LoadWavFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header);
 
 /*
     Returns a soundbuffer from .wav file as a normalized floating-point buffer.
     Caller is responsible for calling free.
 */
-int32_t LoadWaveSoundBufferFloat(const char* Filename, float** OutputBuffer, WaveFile* Header);
+int32_t LoadWavFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header);
+
+#ifdef __cplusplus
+}
+#endif

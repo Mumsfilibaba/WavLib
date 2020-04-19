@@ -1,4 +1,4 @@
-#include "WaveFormat.h"
+#include "WavLib.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -55,7 +55,7 @@ static int LoadWaveData(FILE* File, WaveHeader* Header, uint8_t** OutputBuffer)
     return WAVE_SUCCESS;
 }
 
-static int32_t LoadWaveFile(const char* Filename, uint8_t** OutputBuffer, WaveHeader* Header)
+static int32_t LoadFile(const char* Filename, uint8_t** OutputBuffer, WaveHeader* Header)
 {
     FILE* File = fopen(Filename, "rb");
     if (File != NULL)
@@ -227,10 +227,10 @@ static void ConvertHeader(WaveFile* FileHeader, const WaveHeader* Header)
     printf("Duration in seconds=%.4f\n", FileHeader->Duration);
 }
 
-int32_t LoadWaveSoundBuffer(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header)
+int32_t LoadWavFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header)
 {
-    WaveHeader WavHeader = {};
-    int32_t result = LoadWaveFile(Filename, OutputBuffer, &WavHeader);
+    WaveHeader  WavHeader;
+    int32_t     result = LoadFile(Filename, OutputBuffer, &WavHeader);
     if (result == WAVE_SUCCESS)
     {
         ConvertHeader(Header, &WavHeader);
@@ -239,12 +239,12 @@ int32_t LoadWaveSoundBuffer(const char* Filename, uint8_t** OutputBuffer, WaveFi
     return result;
 }
 
-int32_t LoadWaveSoundBufferFloat(const char* Filename, float** OutputBuffer, WaveFile* Header)
+int32_t LoadWavFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header)
 {
-    WaveHeader  WavHeader   = {};
+    WaveHeader  WavHeader;
     uint8_t*    TempBuffer  = NULL;
 
-    int32_t result = LoadWaveFile(Filename, &TempBuffer, &WavHeader);
+    int32_t result = LoadFile(Filename, &TempBuffer, &WavHeader);
     if (result == WAVE_SUCCESS)
     {
         ConvertHeader(Header, &WavHeader);
