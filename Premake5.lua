@@ -9,6 +9,5 @@ project "WavLib"
 		"WavLib.h",
 		"WavLib.c",
 	}
-project "*"
 	
 	
