@@ -37,6 +37,7 @@ typedef struct tagWaveHeader
 typedef struct tagWaveFile
 {
     uint32_t    SizeInBytes;
+    uint32_t    TotalSampleCount;
     uint32_t    SampleCount;
     uint32_t    SampleSize;
     uint32_t    SampleRate;

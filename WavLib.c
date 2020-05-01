@@ -217,8 +217,10 @@ static void ConvertHeader(WaveFile* FileHeader, const WaveHeader* Header)
     FileHeader->SampleRate      = Header->SampleRate;
     FileHeader->SizeInBytes     = Header->DataSize;
 
-    FileHeader->SampleCount     = (8 * Header->DataSize) / (Header->Channels * Header->BitsPerSample);
-    printf("SampleCount=%u\n", FileHeader->SampleCount);
+    FileHeader->TotalSampleCount = (8 * Header->DataSize) / (Header->Channels * Header->BitsPerSample);
+    printf("SampleCount=%u\n", FileHeader->TotalSampleCount);
+
+    FileHeader->SampleCount = FileHeader->TotalSampleCount / FileHeader->ChannelCount;
 
     FileHeader->SampleSize      = (Header->Channels * Header->BitsPerSample) / 8;
     printf("Size per sample=%u bytes\n", FileHeader->SampleSize);
