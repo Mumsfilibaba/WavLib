@@ -252,36 +252,125 @@ static void _WavLibConvertHeader(WaveFile* FileHeader, const WaveHeader* Header)
     DebugPrint("Duration in seconds=%.4f\n", FileHeader->Duration);
 }
 
-int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header)
+static void _WavLibCombineChannels(const uint8_t* InputBuffer, uint8_t** OutputBuffer, uint32_t BitsPerSample, uint32_t SampleCount, uint32_t ChannelCount)
 {
+    const uint32_t BytesPerSample   = BitsPerSample / 8;
+    const uint32_t TotalSizeInBytes = BytesPerSample * SampleCount * ChannelCount;
+
+    uint8_t* Output = (uint8_t*)WavLibMalloc(TotalSizeInBytes);
+    memset(Output, 0, TotalSizeInBytes);
+
+    if (BytesPerSample == 1)
+    {
+        int8_t*        Out    = (int8_t*)Output;
+        const int8_t*  In     = (const int8_t*)InputBuffer;
+        for (uint32_t s = 0; s < SampleCount; s++)
+        {
+            int32_t sample = 0;
+            for (uint32_t c = 0; c < ChannelCount; c++)
+            {
+                sample += (int32_t)(*In);
+                (*Out) += (*In);
+                In++;  
+            }
+
+            (*Out) = (int8_t)(sample / ChannelCount);
+            Out++;
+        }
+    }
+    else if (BytesPerSample == 2)
+    {
+        int16_t*        Out    = (int16_t*)Output;
+        const int16_t*  In     = (const int16_t*)InputBuffer;
+        for (uint32_t s = 0; s < SampleCount; s++)
+        {
+            int64_t sample = 0;
+            for (uint32_t c = 0; c < ChannelCount; c++)
+            {
+                sample += (int64_t)(*In);
+                In++;
+            }
+
+            (*Out) = (int16_t)(sample / ChannelCount);
+            Out++;
+        }
+    }
+    else if (BytesPerSample == 4)
+    {
+        int32_t*        Out    = (int32_t*)Output;
+        const int32_t*  In     = (const int32_t*)InputBuffer;
+        for (uint32_t s = 0; s < SampleCount; s++)
+        {
+            int64_t sample = 0;
+            for (uint32_t c = 0; c < ChannelCount; c++)
+            {
+                sample += (int64_t)(*In);
+                In++;  
+            }
+
+            (*Out) = (int32_t)(sample / ChannelCount);
+            Out++;
+        }
+    }
+
+    (*OutputBuffer) = Output;
+}
+
+static void _WavLibPreProcess(const uint8_t* In, uint8_t** Out, WaveFile* Header, uint32_t Flags)
+{
+    if (Flags & WAV_LIB_FLAG_MONO)
+    {
+        _WavLibCombineChannels(In, Out, Header->BitsPerSample, Header->SampleCount, Header->ChannelCount);
+
+        // Make sure that the channel count gets updated
+        Header->ChannelCount = 1;
+        
+        // Free the old storage
+        WavLibFree(In);
+    }
+    else
+    {
+        (*Out) = In;
+    }
+}
+
+int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header, uint32_t Flags)
+{
+    uint8_t* TempOut = NULL;
+
     WaveHeader  WavHeader;
-    int32_t     Result = _WavLibLoadFile(Filename, OutputBuffer, &WavHeader);
+    int32_t     Result = _WavLibLoadFile(Filename, &TempOut, &WavHeader);
     if (Result == WAVE_SUCCESS)
     {
         _WavLibConvertHeader(Header, &WavHeader);
+        _WavLibPreProcess(TempOut, OutputBuffer, Header, Flags);
     }
 
     return Result;
 }
 
-int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header)
+int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags)
 {
     WaveHeader  WavHeader;
-    uint8_t*    TempBuffer  = NULL;
+    uint8_t*    FileData  = NULL;
 
-    int32_t Result = _WavLibLoadFile(Filename, &TempBuffer, &WavHeader);
+    int32_t Result = _WavLibLoadFile(Filename, &FileData, &WavHeader);
     if (Result == WAVE_SUCCESS)
     {
         _WavLibConvertHeader(Header, &WavHeader);
 
+        uint8_t* TempOut = NULL;
+        _WavLibPreProcess(FileData, &TempOut, Header, Flags);
+
+        // Convert to floating point
         uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
         (*OutputBuffer)     = (float*)WavLibMalloc(TotalSampleCount * sizeof(float));
         float* OutputIter   = (*OutputBuffer);
 
         if (WavHeader.BitsPerSample == 8)
         {
-            int8_t* End = (int8_t*)(TempBuffer) + TotalSampleCount;
-            for (int8_t* Begin = (int8_t*)TempBuffer; Begin != End;)
+            int8_t* End = (int8_t*)(TempOut) + TotalSampleCount;
+            for (int8_t* Begin = (int8_t*)TempOut; Begin != End;)
             {
                 *(OutputIter) = (float)(*Begin) / 128.0f;
 
@@ -291,8 +380,8 @@ int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile
         }
         else if (WavHeader.BitsPerSample == 16)
         {
-            int16_t* End = (int16_t*)(TempBuffer) + TotalSampleCount;
-            for (int16_t* Begin = (int16_t*)TempBuffer; Begin != End; )
+            int16_t* End = (int16_t*)(TempOut) + TotalSampleCount;
+            for (int16_t* Begin = (int16_t*)TempOut; Begin != End; )
             {
                 *(OutputIter) = (float)(*Begin) / 32768.0f;
                 
@@ -302,8 +391,8 @@ int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile
         }
         else if (WavHeader.BitsPerSample == 32)
         {
-            int32_t* End = (int32_t*)(TempBuffer) + TotalSampleCount;
-            for (int32_t* Begin = (int32_t*)TempBuffer; Begin != End; )
+            int32_t* End = (int32_t*)(TempOut) + TotalSampleCount;
+            for (int32_t* Begin = (int32_t*)TempOut; Begin != End; )
             {
                 *(OutputIter) = (float)(*Begin) / 2147483648.0f;
 
@@ -312,7 +401,7 @@ int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile
             }
         }
 
-        WavLibFree(TempBuffer);
+        WavLibFree(TempOut);
     }
 
     return Result;

@@ -20,6 +20,12 @@ extern "C"
 {
 #endif
 
+enum WavLibFlags
+{
+    WAV_LIB_FLAG_NONE = 0,
+    WAV_LIB_FLAG_MONO = 0x01,
+};
+
 typedef struct tagWaveHeader
 {
     char        RIFF[4];
@@ -54,13 +60,13 @@ typedef struct tagWaveFile
     Returns a soundbuffer from .wav file as a byte buffer.
     Caller is responsible for calling free.
 */
-int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header);
+int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header, uint32_t Flags);
 
 /*
     Returns a soundbuffer from .wav file as a normalized floating-point buffer.
     Caller is responsible for calling free.
 */
-int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header);
+int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags);
 
 void*   WavLibMalloc(uint32_t Size);
 void    WavLibFree(void* Buffer);
