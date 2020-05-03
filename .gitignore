@@ -1,0 +1,5 @@
+# Ignore project files folder
+Projectfiles/
+
+# Ignore build folder
+Build/
