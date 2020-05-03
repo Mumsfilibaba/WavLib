@@ -3,8 +3,11 @@
 
 #include <stdint.h>
 
-#define WAVE_ERROR   (int)-1
-#define WAVE_SUCCESS (int)0
+#define WAVE_NO_DATA                    (int32_t)-4
+#define WAVE_FILE_NOT_FOUND             (int32_t)-3
+#define WAVE_UNSUPPORTED_FORMAT         (int32_t)-2
+#define WAVE_CORRUPT_FILE               (int32_t)-1
+#define WAVE_SUCCESS                    (int32_t)0
 
 #define WAVE_FORMAT_PCM         0x0001
 #define WAVE_FORMAT_IEEE_FLOAT  0x0003
@@ -51,13 +54,18 @@ typedef struct tagWaveFile
     Returns a soundbuffer from .wav file as a byte buffer.
     Caller is responsible for calling free.
 */
-int32_t LoadWavFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header);
+int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header);
 
 /*
     Returns a soundbuffer from .wav file as a normalized floating-point buffer.
     Caller is responsible for calling free.
 */
-int32_t LoadWavFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header);
+int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header);
+
+void*   WavLibMalloc(uint32_t Size);
+void    WavLibFree(void* Buffer);
+
+const char* WavLibGetError(int32_t ErrorCode);
 
 #ifdef __cplusplus
 }
