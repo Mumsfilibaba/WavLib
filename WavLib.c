@@ -349,7 +349,7 @@ int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* H
     return Result;
 }
 
-int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags)
+int32_t WavLibLoadFileFloat32(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags)
 {
     WaveHeader  WavHeader;
     uint8_t*    FileData  = NULL;
@@ -395,6 +395,64 @@ int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile
             for (int32_t* Begin = (int32_t*)TempOut; Begin != End; )
             {
                 *(OutputIter) = (float)(*Begin) / 2147483648.0f;
+
+                OutputIter++;
+                Begin++;
+            }
+        }
+
+        WavLibFree(TempOut);
+    }
+
+    return Result;
+}
+
+int32_t WavLibLoadFileFloat64(const char* Filename, double** OutputBuffer, WaveFile* Header, uint32_t Flags)
+{
+    WaveHeader  WavHeader;
+    uint8_t*    FileData  = NULL;
+
+    int32_t Result = _WavLibLoadFile(Filename, &FileData, &WavHeader);
+    if (Result == WAVE_SUCCESS)
+    {
+        _WavLibConvertHeader(Header, &WavHeader);
+
+        uint8_t* TempOut = NULL;
+        _WavLibPreProcess(FileData, &TempOut, Header, Flags);
+
+        // Convert to floating point
+        uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
+        (*OutputBuffer)     = (double*)WavLibMalloc(TotalSampleCount * sizeof(double));
+        double* OutputIter  = (*OutputBuffer);
+
+        if (WavHeader.BitsPerSample == 8)
+        {
+            int8_t* End = (int8_t*)(TempOut) + TotalSampleCount;
+            for (int8_t* Begin = (int8_t*)TempOut; Begin != End;)
+            {
+                *(OutputIter) = (double)(*Begin) / 128.0;
+
+                OutputIter++;
+                Begin++;
+            }
+        }
+        else if (WavHeader.BitsPerSample == 16)
+        {
+            int16_t* End = (int16_t*)(TempOut) + TotalSampleCount;
+            for (int16_t* Begin = (int16_t*)TempOut; Begin != End; )
+            {
+                *(OutputIter) = (double)(*Begin) / 32768.0;
+                
+                OutputIter++;
+                Begin++;
+            }
+        }
+        else if (WavHeader.BitsPerSample == 32)
+        {
+            int32_t* End = (int32_t*)(TempOut) + TotalSampleCount;
+            for (int32_t* Begin = (int32_t*)TempOut; Begin != End; )
+            {
+                *(OutputIter) = (double)(*Begin) / 2147483648.0;
 
                 OutputIter++;
                 Begin++;

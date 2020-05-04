@@ -63,10 +63,16 @@ typedef struct tagWaveFile
 int32_t WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, WaveFile* Header, uint32_t Flags);
 
 /*
-    Returns a soundbuffer from .wav file as a normalized floating-point buffer.
+    Returns a soundbuffer from .wav file as a normalized 32-bit floating-point buffer.
     Caller is responsible for calling free.
 */
-int32_t WavLibLoadFileFloat(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags);
+int32_t WavLibLoadFileFloat32(const char* Filename, float** OutputBuffer, WaveFile* Header, uint32_t Flags);
+
+/*
+    Returns a soundbuffer from .wav file as a normalized 64-bit floating-point buffer.
+    Caller is responsible for calling free.
+*/
+int32_t WavLibLoadFileFloat64(const char* Filename, double** OutputBuffer, WaveFile* Header, uint32_t Flags);
 
 void*   WavLibMalloc(uint32_t Size);
 void    WavLibFree(void* Buffer);
