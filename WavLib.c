@@ -324,8 +324,9 @@ static void _WavLibPreProcess(const uint8_t* In, uint8_t** Out, WaveFile* Header
         _WavLibCombineChannels(In, Out, Header->BitsPerSample, Header->SampleCount, Header->ChannelCount);
 
         // Make sure that the channel count gets updated
-        Header->ChannelCount = 1;
-        
+        Header->ChannelCount        = 1;
+        Header->TotalSampleCount    = Header->SampleCount;
+
         // Free the old storage
         WavLibFree(In);
     }
