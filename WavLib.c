@@ -231,11 +231,12 @@ static int32_t _WavLibLoadFile(const char* Filename, uint8_t** OutputBuffer, Wav
 
 static void _WavLibConvertHeader(WaveFile* FileHeader, const WaveHeader* Header)
 {
-    FileHeader->BitsPerSample   = Header->BitsPerSample;
-    FileHeader->ByteRate        = Header->ByteRate;
-    FileHeader->ChannelCount    = Header->Channels;
-    FileHeader->SampleRate      = Header->SampleRate;
-    FileHeader->SizeInBytes     = Header->DataSize;
+    FileHeader->BitsPerSample           = Header->BitsPerSample;
+    FileHeader->OriginalBitsPerSample   = Header->BitsPerSample;
+    FileHeader->ByteRate                = Header->ByteRate;
+    FileHeader->ChannelCount            = Header->Channels;
+    FileHeader->SampleRate              = Header->SampleRate;
+    FileHeader->SizeInBytes             = Header->DataSize;
 
     FileHeader->TotalSampleCount = (8 * Header->DataSize) / Header->BitsPerSample;
     
@@ -363,10 +364,14 @@ int32_t WavLibLoadFileFloat32(const char* Filename, float** OutputBuffer, WaveFi
         _WavLibPreProcess(FileData, &TempOut, Header, Flags);
 
         // Convert to floating point
-        uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
-        (*OutputBuffer)     = (float*)WavLibMalloc(TotalSampleCount * sizeof(float));
-        float* OutputIter   = (*OutputBuffer);
+        const uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
+        const uint32_t SizeInBytes      = TotalSampleCount * sizeof(float);
 
+        Header->SizeInBytes     = SizeInBytes;
+        Header->BitsPerSample   = 32; // 32-bit floating point 
+        (*OutputBuffer) = (float*)WavLibMalloc(SizeInBytes);
+
+        float* OutputIter   = (*OutputBuffer);
         if (WavHeader.BitsPerSample == 8)
         {
             int8_t* End = (int8_t*)(TempOut) + TotalSampleCount;
@@ -421,10 +426,14 @@ int32_t WavLibLoadFileFloat64(const char* Filename, double** OutputBuffer, WaveF
         _WavLibPreProcess(FileData, &TempOut, Header, Flags);
 
         // Convert to floating point
-        uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
-        (*OutputBuffer)     = (double*)WavLibMalloc(TotalSampleCount * sizeof(double));
-        double* OutputIter  = (*OutputBuffer);
+        const uint32_t TotalSampleCount = Header->SampleCount * Header->ChannelCount;
+        const uint32_t SizeInBytes      = TotalSampleCount * sizeof(double);
 
+        Header->SizeInBytes     = SizeInBytes;
+        Header->BitsPerSample   = 64; // 64-bit floating point 
+        (*OutputBuffer) = (double*)WavLibMalloc(SizeInBytes);
+
+        double* OutputIter = (*OutputBuffer);
         if (WavHeader.BitsPerSample == 8)
         {
             int8_t* End = (int8_t*)(TempOut) + TotalSampleCount;

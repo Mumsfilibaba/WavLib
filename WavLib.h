@@ -52,6 +52,7 @@ typedef struct tagWaveFile
     uint32_t    SampleRate;
     uint32_t    ByteRate;
     uint32_t    BitsPerSample;
+    uint32_t    OriginalBitsPerSample; 
     uint32_t    ChannelCount;
     float       Duration;
 } WaveFile;
